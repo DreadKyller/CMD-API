@@ -7,11 +7,12 @@ import org.bukkit.event.player.PlayerChatEvent;
 import org.bukkit.event.player.PlayerListener;
 
 @SuppressWarnings("rawtypes")
-public class SimpleItemAPI extends PlayerListener{
+public class SimpleCommandAPI extends PlayerListener{
 	
 	private HashMap<CMDListener, String> registered;
 	
-	public SimpleItemAPI(){
+	public SimpleCommandAPI(){
+		registered=new HashMap<CMDListener, String>();
 	}
 	
 	public boolean register(CMDListener c, String text){
@@ -25,6 +26,10 @@ public class SimpleItemAPI extends PlayerListener{
 	
 	public void onPlayerChat(PlayerChatEvent event){
 		String chat = event.getMessage();
+		if(event.isCancelled()){
+			return;
+		}
+		
 		for(CMDListener cmd: registered.keySet()){
 			
 			char[] chars = registered.get(cmd).toCharArray(); 
@@ -32,7 +37,6 @@ public class SimpleItemAPI extends PlayerListener{
 			String sub = chat.substring(0, chars.length);
 			
 			if(sub.equalsIgnoreCase(registered.get(cmd))){
-				event.setCancelled(true);
 				String[] agg = chat.split(" ");
 				String comd = agg[0].substring(1, agg[0].toCharArray().length);
 				String usage=agg[0].substring(0, 1);
@@ -41,8 +45,10 @@ public class SimpleItemAPI extends PlayerListener{
 					content[i-1]=agg[i];
 				}
 				cmd.onCustomCommand(event.getPlayer() ,usage, comd, content);
+				if(!event.isCancelled()){
+					event.setCancelled(true);
+				}
 			}
 		}
 	}
-	
 }

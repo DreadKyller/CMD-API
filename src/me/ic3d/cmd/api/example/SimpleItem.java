@@ -1,7 +1,7 @@
 package me.ic3d.cmd.api.example;
 
 import me.ic3d.cmd.api.simple.CMDListener;
-import me.ic3d.cmd.api.simple.SimpleItemAPI;
+import me.ic3d.cmd.api.simple.SimpleCommandAPI;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -12,7 +12,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public class SimpleItem extends JavaPlugin{
 	
-	SimpleItemAPI api = new SimpleItemAPI();
+	SimpleCommandAPI api = new SimpleCommandAPI();
 	
 	@Override
 	public void onDisable(){
@@ -30,21 +30,40 @@ public class SimpleItem extends JavaPlugin{
 
 		@Override
 		public void onCustomCommand(Player p, String usage, String cmd, String[] content){
-			if(usage.equalsIgnoreCase("$")&&content.length<2){
-				Material mat = Material.valueOf(cmd);
+			
+			if(!p.isOp()){
+				return;
+			}
+			
+			if(usage.equalsIgnoreCase("$")&&content.length<3){
+				Material mat = Material.getMaterial(cmd.toUpperCase());
 				if(mat==null){
-					p.sendMessage(ChatColor.DARK_RED+"No Item Named "+cmd+" exists!");
-					return;
+					try{
+						mat = Material.getMaterial(Integer.parseInt(cmd));
+					}catch(NumberFormatException e){
+						p.sendMessage("No Item Named "+cmd);
+						return;
+					}
+					if(mat==null){
+						p.sendMessage("No Item With ID="+cmd);
+						return;
+					}
 				}
 				int amount = 1;
-				if(content.length==1){
+				if(content.length>=1){
 					try{
 						amount = Integer.parseInt(content[0]);
 					}catch(Exception e){
 					}
 				}
+				Player pi;
+				if(content.length==2){
+					pi = p.getServer().matchPlayer(content[1]).get(0);
+				}else{
+					pi = p;
+				}
 				ItemStack item = new ItemStack(mat, amount);
-				p.getInventory().addItem(item);
+				pi.getInventory().addItem(item);
 			}
 		}
 	}
